@@ -1,0 +1,29 @@
+{% extends 'base.twig' %}
+
+{% block body %}
+<div class="lg:w-2/4 mx-auto py-8 px-6 bg-white rounded-xl">
+    <div id="testSelection">
+        <h1 class="font-bold text-5xl text-center mb-8">Printful Quiz</h1>
+        <form onsubmit="validateForm(event, $('#tests' ).val());" onkeypress="onFormEnterPress(event);">
+            <div class="mb-6">
+                <input id="fullname" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Enter your name" required>
+            </div>
+            <div class="mb-6">
+                <select name="id" required id="tests" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                    <option disabled value="" selected>Choose a test</option>
+                    {% for test in tests %}
+                        <option value="{{ test.id|escape }}">{{ test.title|escape }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="w-20 py-2 px-4 bg-green-500 text-white rounded-xl">Start</button>
+        </form>
+    </div>
+    <div id="questions" style="display: none;">
+        <div class="p-3 question-block"></div>
+        <div id="progressBar" class="w-full bg-gray-200 rounded-full dark:bg-gray-700">
+            <div class="bg-green-600 text-xs font-medium text-blue-100 text-center p-0.5 leading-none rounded-full status" style="width: 0%"> 0%</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

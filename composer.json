@@ -1,0 +1,32 @@
+{
+    "name": "jkone/printful-quiz",
+    "description": "Printful Quiz",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Jans"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "slim/slim": "4.*",
+        "slim/psr7": "^1.6",
+        "twig/twig": "^3.6",
+        "ext-pdo": "*",
+        "php-di/php-di": "^7.0",
+        "devcoder-xyz/php-dotenv": "^2.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Quiz\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Quiz\\Test": "tests/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.1"
+    }
+}

@@ -1,0 +1,8 @@
+{% extends 'base.twig' %}
+
+{% block body %}
+<div class="container">
+    <h1>Welcome back, {{ results[0].fullname }}!</h1>
+    <h1>You responded correctly to {{ results[0].answers }} questions.</h1>
+</div>
+{% endblock %}

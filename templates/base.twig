@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Printful Quiz</title>
+    <link href="https://unpkg.com/tailwindcss@2.0.1/dist/tailwind.min.css" rel="stylesheet" />
+    <script
+    src="https://code.jquery.com/jquery-3.7.0.min.js"
+    integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g="
+    crossorigin="anonymous">
+    </script>
+  </head>
+  <body class="bg-gray-200 p-4">
+    {% block body %}{% endblock %}
+
+    <style>
+      label.selected {
+        background-color: lightyellow;
+      }
+
+      .validation-error {
+        color: red;
+      }
+    </style>
+    <script>
+      let questions, fullName, testId;
+      let answers = [];
+      let userAnswers = [];
+
+      function fetchData(url, data) {
+
+        return fetch(url + '.php', {
+          method: 'POST',
+          body: data
+        })
+        .then(response => response.json())
+      }
+
+      function validateForm(e, id) {
+
+        let form = $('form').get(0);
+        if (!form.checkValidity()) {
+          form.reportValidity();
+        }
+        
+        e.preventDefault();
+        getTestQuestions(id);
+      }
+
+      async function addTestResult(id, name, answers) {
+        let formData = new FormData();
+        formData.append('id', id);
+        formData.append('fullName', name);
+        formData.append('answers', answers);
+
+        const response = await fetchData('add_results', formData);
+        if(response.id) {
+
+          $('#questions').append('<div class="flex justify-center">You can review your test results later by using link: '+ window.location.href + 'result/'+ response.id +'</div>');
+
+        }
+      }
+
+      async function getTestQuestions(id) {
+        fullName = $('#fullname').val();
+        testId = id;
+
+        let formData = new FormData();
+        formData.append('id', id);
+        
+        questions = await fetchData('get_questions', formData);
+
+        for(const question of questions) {
+
+          let formData = new FormData();
+          formData.append('id', question.id);
+          
+          let answerGroup = await fetchData('get_answers', formData);
+          answers.push(answerGroup);
+
+        }
+
+        $('#testSelection').remove();
+        $('#questions').show();
+
+        createQuestionElement(questions, answers, 0);
+      }
+
+      function createQuestionElement(questions, answers, index) {
+
+        let elements = '<div><h1 class="font-bold text-4xl text-center mb-8">'+ questions[index].title +'</h1>';
+        let count = 0;
+        for(const answer of answers[index]) {
+
+          if(questions[index].id === answer.q_id) {
+            count += 1;
+            elements += '<label id="label_'+ answer.id +'" onclick="selectAnswer('+ answer.id +');" class="answer-label block mt-4 border border-gray-300 rounded-lg py-2 px-6 text-lg hover:bg-gray-100 cursor-pointer"><input value="'+ count +'" id="answer_'+ answer.id +'" type="radio" class="answer-radio hidden">'+ answer.title +'</label>';
+          }
+
+        }
+
+        elements += '<div class="validation-error mt-3" style="display: none;"><p>Please select at least one answer</p></div><div class="mt-3 flex justify-'+ (index === 0 ? "end" : "between") +'">';
+        if(index !== 0) elements += '<button onclick="back('+ (index) +');" class="w-20 py-2 px-4 bg-red-500 text-white rounded-xl">Back</button>';
+        elements += '<button onclick="next('+ (index) +');" class="w-20 py-2 px-4 bg-green-500 text-white rounded-xl">Next</button></div></div>';
+
+        $('#questions .question-block').html(elements);
+      }
+
+      function next(index) {
+
+          let answersOptions = $('.answer-radio');
+          answersOptions.each(function(key) {
+  
+            if($(this).attr('checked')) {
+
+              userAnswers.push($(this).val());
+              stepBtnPress(index, true);
+
+              if(questions.length-1 !== index) {
+
+                createQuestionElement(questions, answers, index+1);
+
+              } else {
+                
+                let countCorrect = 0;
+
+                for(const k in userAnswers) {
+                  console.log(answers[k][userAnswers[k]-1]);
+                  countCorrect += answers[k][userAnswers[k]-1].correct > 0 ? 1 : 0;
+                }
+
+                addTestResult(testId, fullName, countCorrect);
+                $('#questions').html('<h1 class="font-bold text-5xl text-center mb-8">Thanks, ' + fullName +'!</h1><div class="flex justify-center">You responded correctly to '+ countCorrect +' out of '+ questions.length +' questions.</div>');
+              }
+  
+              return false;
+  
+            } else if(answersOptions.length-1 === key) {
+
+              $('.validation-error').show();
+              // $('.answer-label').css('border-color', 'red'); // uncomment to make answers border red, when no answer is selected, requires line 165 to be uncommented
+            }
+          });
+      }
+
+      function back(index) {
+
+        userAnswers.pop();
+
+        stepBtnPress(index, false);
+        createQuestionElement(questions, answers, index-1);
+      }
+
+      function stepBtnPress(index, isNext) {
+
+        index = isNext ? index+1 : index-1;
+
+        const percentage = Math.round(index / questions.length * 100)+ "%";
+        $('#progressBar .status').text(percentage).width(percentage);
+      }
+
+      function selectAnswer(id) {
+
+        // $('.answer-label').css('border-color', ''); // uncomment for answer options red border to work properly, requires line 142 to be uncommented
+        $('.answer-radio').removeAttr('checked');
+        $('#answer_' + id).attr('checked', 'checked');
+        $('.selected').removeClass('selected');
+        $('#label_' + id).addClass('selected').removeClass('hover:bg-gray-100');
+      }
+
+      function onFormEnterPress(e) {
+
+        if(e.key === "Enter") {
+            e.preventDefault();
+        }  
+      }
+    </script>
+  </body>
+</html>
